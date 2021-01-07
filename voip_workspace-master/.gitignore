@@ -1,0 +1,10 @@
+
+.DS_Store
+*.swp
+
+build*
+
+.vscode
+*_solution
+
+x64
