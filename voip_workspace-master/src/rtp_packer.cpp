@@ -85,10 +85,18 @@ void RtpPacker::setSSRC(std::vector<uint8_t>* header)
 
 uint16_t RtpPacker::getRandom16BitNumber()
 {
-	return (uint16_t) 1234;
+	std::cout << std::numeric_limits<uint16_t>::max();
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<uint16_t> distrib(1, std::numeric_limits<uint16_t>::max());
+	return (uint16_t) distrib(gen);
 }
 
 uint32_t RtpPacker::getRandom32BitNumber()
 {
-	return (uint32_t) 56789;
+	std::cout << std::numeric_limits<uint32_t>::max();
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<uint32_t> distrib(1, std::numeric_limits<uint32_t>::max());
+	return (uint32_t) distrib(gen);
 }
