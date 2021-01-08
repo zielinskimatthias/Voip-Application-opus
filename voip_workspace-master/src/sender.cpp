@@ -27,7 +27,7 @@ void Sender::init(std::string ipAddress, unsigned int port)
 
 void Sender::send(std::vector<uint8_t>* data)
 {
-	//std::cout << "SENDING " << std::endl;
+	// just for information purposes and so that the console does not get spammed. 99 is arbitrary and can be changed as wished.
 	if (sentPackets++ % 99 == 0)
 	{
 		std::cout << "[INFO] Sent " << sentPackets << " packets during this session already. " << std::endl;

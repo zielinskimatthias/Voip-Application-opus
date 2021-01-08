@@ -44,6 +44,7 @@
 #include "simplejb.h"
 #include "rtp_packer.h"
 #include "audioencoder.h"
+#include "opus_settings.h"
 
 #define PT_10_SR 44100
 #define PT_10_CH 2

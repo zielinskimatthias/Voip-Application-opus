@@ -35,14 +35,17 @@ void AudioEncoder::init(opus_int32 samplingRate, opus_int32 framesize, int chann
 
 void AudioEncoder::encode(std::vector<uint8_t>* inputData, std::vector<uint8_t>* outputData)
 {
-	opus_int16 in[(480 * 2)];
-	uint8_t out[1276];
 
-	for (int i = 0; i < (2 * 480); i++)
+	// shift bits to transform uint8_t type to opus_int16 type
+	for (int i = 0; i < (OPUS_CHANNELS * OPUS_FRAMESIZE); i++)
 		in[i] = inputData->at(2 * i + 1) << 8 | inputData->at(2 * i);
 
 	opus_int32 encodedSize = opus_encode(encoder, in, framesize, out, 1276);
-	std::cout << "RESULT: " << encodedSize << std::endl;
+	if (encodedSize <= 0)
+	{
+		std::cerr << "Error encoding the pcm!" << std::endl;
+		return;
+	}
 	
 	outputData->insert(outputData->begin(), out, out + encodedSize);
 

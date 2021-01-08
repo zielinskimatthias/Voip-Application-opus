@@ -55,6 +55,7 @@ VoIPComm::~VoIPComm()
 
 int VoIPComm::process(util::AudioBuffer& output, util::AudioBuffer const& input) 
 {
+	// two modes this application can be run in
 	if (isLoopback) { processLoopback(output, input); }
 	else if (isUDP) { processUDP(output, input); }
 	return 0;
@@ -67,13 +68,14 @@ void VoIPComm::processLoopback(util::AudioBuffer& output, util::AudioBuffer cons
 
 void VoIPComm::processUDP(util::AudioBuffer& output, util::AudioBuffer const& input)
 {
+	/* PACKING & UNPACKING */
 	if (isOpus)
 	{
+		/* IF OPUS ENCODE/DECODE */
+		// allocate the data with the max encoded data size
 		std::vector <uint8_t>encodedData;
-		encodedData.reserve(1276);
+		encodedData.reserve(OPUS_MAX_SIZE);
 		encoder.encode(&std::vector<uint8_t>(input.data(), input.data() + input.size()), &encodedData);
-
-		std::cout << "WR CORRECT DATA: " << static_cast<unsigned>(encodedData.at(0)) << std::endl;
 	
 		sender.send(&packer.pack(&encodedData));
 	}
@@ -82,6 +84,7 @@ void VoIPComm::processUDP(util::AudioBuffer& output, util::AudioBuffer const& in
 		sender.send(&packer.pack(&std::vector<uint8_t>(input.data(), input.data() + input.size())));
 	}
 	
+	/* READ OUT JITTER BUFFER */
 	if (jitterBuffer->hasData())
 	{
 		jitterBuffer->getFrontData(output.data());
@@ -203,11 +206,10 @@ bool VoIPComm::init(int argc, char* argv[]) {
 				sampleRate = 44100;
 				frameSize = 512;
 				break;
-			case 100:
-				// as agreed during recess lecture for opus
-				channels = 2;
-				sampleRate = 48000;
-				frameSize = 480;
+			case OPUS_PAYLOADTYPE:
+				channels = OPUS_CHANNELS;
+				sampleRate = OPUS_SAMPLERATE;
+				frameSize = OPUS_FRAMESIZE;
 				break;
 			default:
 				std::cerr << "Invalid payload type chosen." << std::endl;
@@ -224,7 +226,7 @@ bool VoIPComm::init(int argc, char* argv[]) {
 			}
 
 			/* UDP + OPUS */
-			if (payloadType.getValue() == 100)
+			if (payloadType.getValue() == OPUS_PAYLOADTYPE)
 			{
 				initOpus(sampleRate, frameSize, channels);
 				isOpus = true;
@@ -251,6 +253,7 @@ void VoIPComm::listDevices() {
 
 bool VoIPComm::initLoopback(int inputDeviceID, int outputDeviceID, uint32_t inputChannels, uint32_t outputChannels, uint32_t sampleRate, uint32_t framesize)
 {
+	// intialization method for loopback
 	if (isInitialized) { return false; }
 	if (soundcard.init(inputDeviceID, outputDeviceID, inputChannels, outputChannels, sampleRate, framesize, util::AudioBuffer::INT16))
 	{
@@ -265,13 +268,14 @@ bool VoIPComm::initLoopback(int inputDeviceID, int outputDeviceID, uint32_t inpu
 bool VoIPComm::initUDP(std::string ipAddress, uint32_t lPort, uint32_t rPort, int inputDeviceID, int outputDeviceID, uint32_t inputChannels, 
 	uint32_t outputChannels, uint32_t sampleRate, uint32_t framesize, uint8_t payloadType)
 {
+	//intialization method for UDP
 	if (isInitialized) { return false; }
 	
 	if (soundcard.init(inputDeviceID, outputDeviceID, inputChannels, outputChannels, sampleRate, framesize, util::AudioBuffer::INT16))
 	{
 		std::cout << "[UDP] soundcard successfully initialized!" << std::endl;
 
-		packer.init(sampleRate, framesize, payloadType);
+		packer.init(payloadType);
 		jitterBuffer = new SimpleJB();
 		receiver.init(lPort, jitterBuffer, payloadType);
 		sender.init(ipAddress, rPort);
@@ -285,6 +289,7 @@ bool VoIPComm::initUDP(std::string ipAddress, uint32_t lPort, uint32_t rPort, in
 
 void VoIPComm::initOpus(uint32_t sampleRate, uint32_t framesize, uint32_t inputChannels)
 {
+	//intialization method for opus
 	encoder.init(sampleRate, framesize, inputChannels);
 	std::cout << "[OPUS] opus initialized!" << std::endl;
 }

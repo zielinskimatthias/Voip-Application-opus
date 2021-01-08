@@ -15,6 +15,7 @@
 #include "simplejb.h"
 #include "rtp_depacker.h"
 #include "audiodecoder.h"
+#include "opus_settings.h"
 
 class Receiver {
 public:

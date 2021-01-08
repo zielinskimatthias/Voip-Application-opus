@@ -10,19 +10,22 @@
 
 SimpleJB::SimpleJB()
 {
-	std::cout << "Jitterbuffer with capacity for " << BUFFER_MAX_PACKETS << " packets (without header) created." << std::endl;
+	std::cout << "[JB] Jitterbuffer with capacity for " << BUFFER_MAX_PACKETS << " packets (without header) created." << std::endl;
 }
 
 SimpleJB::~SimpleJB() { }
 
 void SimpleJB::add(std::vector<uint8_t> data)
 {
+	// when the buffer reaches it max size, clear it before adding the new packet to avoid too long delay.
 	if (dataBuffer.size() == BUFFER_MAX_PACKETS)
 	{
-		std::cerr << "Buffer full! Resetting the buffer to avoid too long delay" << std::endl;
+		std::cerr << "[JB] Buffer full! Resetting the buffer to avoid too long delay" << std::endl;
 		dataBuffer.clear();
-		//return;
 	}
+
+	// The class lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for owning a mutex for the duration of a scoped block.
+	// source: https://en.cppreference.com/w/cpp/thread/lock_guard
 	const std::lock_guard<std::mutex> lock(mutex);
 
 	dataBuffer.push_back(data);
@@ -32,10 +35,15 @@ void SimpleJB::add(std::vector<uint8_t> data)
 void SimpleJB::getFrontData(uint8_t* outputPtr)
 {
 	if (dataBuffer.empty()) { return; }
+
+	// The class lock_guard is a mutex wrapper that provides a convenient RAII-style mechanism for owning a mutex for the duration of a scoped block.
+	// source: https://en.cppreference.com/w/cpp/thread/lock_guard
 	const std::lock_guard<std::mutex> lock(mutex);
 
+	// copy first packet to the outputPtr (should be the playout buffer)
 	std::copy(dataBuffer.front().begin(), dataBuffer.front().end(), outputPtr);
 
+	// pop the packet from the front
 	dataBuffer.pop_front();
 }
 

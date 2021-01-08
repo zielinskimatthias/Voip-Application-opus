@@ -10,12 +10,13 @@
 #define VOIP_RTP_PACKER_H
 
 #include <vector>
+#include "opus_settings.h"
 
 class RtpPacker 
 {
 public:
 	RtpPacker();
-	void init(uint32_t sampleRate, uint32_t framesize, uint8_t payloadType);
+	void init(uint8_t payloadType);
 	std::vector<uint8_t> pack(std::vector<uint8_t>* data);
 
 private:
@@ -29,10 +30,7 @@ private:
 
 	uint16_t seqNumber;
 	uint32_t timestamp;
-	uint32_t timestampIncrease;
 	uint32_t ssrc;
-	uint32_t sampleRate;
-	uint32_t framesize; 
 	uint8_t payloadType;
 };
 

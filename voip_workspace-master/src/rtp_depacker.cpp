@@ -13,6 +13,8 @@ RtpDepacker::RtpDepacker() : isSequenceNumberSet(false), isSSRCSet(false), lastS
 
 bool RtpDepacker::validatePacket(std::vector<uint8_t>* packet, uint8_t expectedPayloadType)
 {
+	// this function just takes care of giving the user output if the validation failed and also validates the packet ofc.
+	// we just have to call this method instead of every single validation method
 
 	if (!validateVersion(packet)) 
 	{ 
@@ -48,6 +50,7 @@ bool RtpDepacker::validatePacket(std::vector<uint8_t>* packet, uint8_t expectedP
 
 std::vector<uint8_t> RtpDepacker::unpack(std::vector<uint8_t>* packet)
 {
+	// when unpacking the first valid packet in a session, we also save its sequence number and the SSRC
 	if (!isSequenceNumberSet)
 	{
 		lastSequenceNumber = getSequenceNumber(packet);
@@ -60,23 +63,26 @@ std::vector<uint8_t> RtpDepacker::unpack(std::vector<uint8_t>* packet)
 		isSSRCSet = true;
 	}
 
-	uint8_t payloadType = packet->at(1) & 0x7F;
+	//uint8_t payloadType = packet->at(1) & 0x7F;
 
 	return std::vector<uint8_t>(packet->begin() + 12, packet->end());
 }
 
 bool RtpDepacker::validateVersion(std::vector<uint8_t>* packet)
 {
+	// version should always be 2
 	return getVersion(packet) == 2;
 }
 
 bool RtpDepacker::validatePayloadType(std::vector<uint8_t>* packet, uint8_t expectedPayloadType)
 {
+	// expected payload type should always be the same as we are using. To disable this, just return true instead
 	return getPayloadType(packet) == expectedPayloadType;
 }
 
 bool RtpDepacker::validateSequenceNumber(std::vector<uint8_t>* packet)
 {
+	// sequence number should always increase by one
 	uint16_t packetSeqNumber = getSequenceNumber(packet);
 
 	bool result = (packetSeqNumber == lastSequenceNumber + 1);
@@ -87,6 +93,7 @@ bool RtpDepacker::validateSequenceNumber(std::vector<uint8_t>* packet)
 
 bool RtpDepacker::validateSSRC(std::vector<uint8_t>* packet)
 {
+	// expected ssrc is always the same, once it was set (not supposed to change)
 	return getSSRC(packet) == expectedSSRC;
 }
 

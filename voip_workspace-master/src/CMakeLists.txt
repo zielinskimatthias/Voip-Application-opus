@@ -21,7 +21,8 @@ set( HDR voip_comm.h
          rtp_packer.h
          rtp_depacker.h
          audioencoder.h
-         audiodecoder.h )
+         audiodecoder.h
+	 opus_settings.h )
 
 # NOTE: Change this to voipcomm_yourstudentid, e.g. voipcomm_foobar4242
 set( EXECUTABLE_NAME voipcomm_zielinskim71490)

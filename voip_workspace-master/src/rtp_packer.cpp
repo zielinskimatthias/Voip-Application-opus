@@ -8,26 +8,22 @@
 
 #include "rtp_packer.h"
 
-RtpPacker::RtpPacker() : sampleRate(), framesize(), payloadType()
-{ 
+RtpPacker::RtpPacker() : payloadType()
+{
+	// first we have to randomly intialize these values
 	seqNumber = getRandom16BitNumber();
 	timestamp = getRandom32BitNumber();
 	ssrc = getRandom32BitNumber();
 }
 
-void RtpPacker::init(uint32_t sampleRate, uint32_t framesize, uint8_t payloadType)
+void RtpPacker::init(uint8_t payloadType)
 {
-	this->sampleRate = sampleRate;
-	this->framesize = framesize;
 	this->payloadType = payloadType;
-	
-	float_t frameDuration = (float_t) framesize * (1 / (float_t) sampleRate);
-	uint32_t samplesPerSecond = 1 / frameDuration;
-	timestampIncrease = sampleRate / samplesPerSecond;
 }
 
 std::vector<uint8_t> RtpPacker::pack(std::vector<uint8_t>* data)
 {
+	// header is always 12 byte so lets allocate the memory
 	std::vector<uint8_t> header(12, 0);
 	setFirstByte(&header);
 	setSecondByte(&header);
@@ -35,6 +31,7 @@ std::vector<uint8_t> RtpPacker::pack(std::vector<uint8_t>* data)
 	setTimestamp(&header);
 	setSSRC(&header);
 
+	// at the and of setting the header, append the payload data to the end of the header and return it
 	header.insert(header.end(), data->begin(), data->end());
 
 	return header;
@@ -55,6 +52,7 @@ void RtpPacker::setSequenceNumber(std::vector<uint8_t>* header)
 {
 	header->at(2) = (seqNumber & 0xFF00) >> 8;
 	header->at(3) = seqNumber & 0x00FF;
+	// % so the seq number starts at 0 on overflow
 	seqNumber = (seqNumber + 1) % std::numeric_limits<uint16_t>::max();
 }
 
@@ -62,11 +60,13 @@ void RtpPacker::setTimestamp(std::vector<uint8_t>* header)
 {
 	if (payloadType == 10 || payloadType == 11)
 	{
+		// % so the timestamp starts at 0 on overflow
 		timestamp = (timestamp + 512) % std::numeric_limits<uint32_t>::max();
 	}
-	else if (payloadType == 100)
+	else if (payloadType == OPUS_PAYLOADTYPE)
 	{
-		timestamp = (timestamp + 480) % std::numeric_limits<uint32_t>::max();
+		// % so the timestamp starts at 0 on overflow
+		timestamp = (timestamp + OPUS_TIMESTAMP_INCREMENT) % std::numeric_limits<uint32_t>::max();
 	}
 	
 	header->at(4) = (timestamp & 0xFF000000) >> 24;

@@ -10,6 +10,7 @@
 #define VOIP_AUDIODECODER_H
 
 #include "opus.h"
+#include "opus_settings.h"
 #include <vector>
 
 class AudioDecoder {
@@ -23,6 +24,9 @@ private:
 	OpusDecoder* decoder;
 	opus_int32 rate;
 	opus_int32 framesize;
+	opus_int16 out[(OPUS_CHANNELS * OPUS_FRAMESIZE)];
+	// times 2, because uint8_t is just 1 Byte and uint16_t is two, so the actual framesize in bytes is 2 * OPUS_FRAMESIZE
+	uint8_t outUint8[(2 * OPUS_CHANNELS * OPUS_FRAMESIZE)];
 };
 
 #endif /* VOIP_AUDIODECODER_H */

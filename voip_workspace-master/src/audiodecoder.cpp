@@ -35,13 +35,17 @@ void AudioDecoder::init(opus_int32 samplingRate, opus_int32 framesize, int chann
 
 void AudioDecoder::decode(std::vector<uint8_t>* inputData, std::vector<uint8_t>* outputData)
 {
-	opus_int16 out[(6 * 480)];
-	uint8_t outUint8[(6 * 480) * 2 * 2];
+	
 
-	int decodedSize = opus_decode(decoder, &inputData->at(0), (opus_int32)inputData->size(), out, (6 * 480), 0);
-	std::cout << "RESULT DEC: " << decodedSize << std::endl;
+	int decodedSize = opus_decode(decoder, &inputData->at(0), (opus_int32)inputData->size(), out, (OPUS_CHANNELS * OPUS_FRAMESIZE), 0);
+	if (decodedSize <= 0)
+	{
+		std::cerr << "Error decoding the encoded, received data!" << std::endl;
+		return;
+	}
 
-	for (int i = 0; i < 2 * 480; i++)
+	// transform opusint16 to uint8_t
+	for (int i = 0; i < OPUS_CHANNELS * OPUS_FRAMESIZE; i++)
 	{
 		outUint8[2 * i] = out[i] & 0xFF;
 		outUint8[2 * i + 1] = (out[i] >> 8) & 0xFF;
@@ -49,6 +53,7 @@ void AudioDecoder::decode(std::vector<uint8_t>* inputData, std::vector<uint8_t>*
 
 	if (decodedSize > 0)
 	{
-		outputData->insert(outputData->begin(), outUint8, outUint8 + (4 *480));
+		// times 2, because uint8_t is just 1 Byte and uint16_t is two, so the actual framesize in bytes is 2 * OPUS_FRAMESIZE
+		outputData->insert(outputData->begin(), outUint8, outUint8 + (OPUS_CHANNELS * 2 * OPUS_FRAMESIZE));
 	}
 }

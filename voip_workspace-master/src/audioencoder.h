@@ -10,6 +10,7 @@
 #define VOIP_AUDIOENCODER_H
 
 #include "opus.h"
+#include "opus_settings.h"
 #include <vector>
 #include <iostream>
 
@@ -25,6 +26,8 @@ private:
 	OpusEncoder* encoder;
 	opus_int32 rate;
 	opus_int32 framesize;
+	opus_int16 in[(OPUS_FRAMESIZE * OPUS_CHANNELS)];
+	uint8_t out[OPUS_MAX_SIZE];
 };
 
 #endif /* VOIP_AUDIOENCODER_H */

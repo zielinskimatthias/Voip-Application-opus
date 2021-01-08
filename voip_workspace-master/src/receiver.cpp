@@ -62,27 +62,36 @@ void Receiver::receive() {
 
 	while (running_) {
 		socket.recvfrom(from, packet, 2060);
-		std::cout << "Received " << packet.size() << " bytes from " << from.toString(true) << std::endl;
+		//std::cout << "Received " << packet.size() << " bytes from " << from.toString(true) << std::endl;
 
+		// just for information purposes and to avoid spamming the the console. 99 is an arbitrary chosen value, can be modified freely
 		if(receivedPacketCount++ % 99 == 0)
 		{
 			std::cout << "[INFO] Received " << receivedPacketCount << " packets during this session already. " << std::endl;
 		}
 
+		// THE PACKET IS ALWAYS VALIDATED FIRST <<<<
 		if (depacker.validatePacket(&packet, payloadType))
 		{
-			if (payloadType == 100)
+			if (payloadType == OPUS_PAYLOADTYPE)
 			{
+				// 1. unpack data
 				std::vector<uint8_t> unpackedData = depacker.unpack(&packet);
+
+				// reserve memory for decoded data
 				std::vector<uint8_t> decodedData;
-				decodedData.reserve(960 * 2);
+				// times 2, because uint8_t is just 1 Byte and uint16_t is two, so the actual framesize in bytes is 2 * OPUS_FRAMESIZE
+				decodedData.reserve(OPUS_FRAMESIZE * OPUS_CHANNELS * 2);
+
+				// 2. decode data
 				decoder.decode(&unpackedData, &decodedData);
-				std::cout << "SIZE: " << decodedData.size() << std::endl;
+
+				// 3. push to jb
 				jitterBuffer->add(decodedData);
 			}
 			else
-
 			{
+				// 1. depack and then push to jb
 				jitterBuffer->add(depacker.unpack(&packet));
 			}
 		}
